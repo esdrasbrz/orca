@@ -8,39 +8,41 @@ This document formalizes the software architecture, design decisions, interface 
 
 We adopt a **Layered Architecture** that decouples physical hardware PWM generation from vehicle kinematics, teleoperation mixing, and closed-loop feedback.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Application Layer                               │
-│  • main.cpp (FreeRTOS Tasks, Robot State Machine, BLE Teleop)          │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Normalized (throttle, turn) or Twist (v, ω)
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Layer 2: DifferentialDrive                      │
-│  • Kinematics: Unicycle model (v, ω) -> (v_left, v_right)              │
-│  • Outer Loop: Heading-Lock PID (BNO085 Gyro rate vs. target ω)        │
-│  • Slew Rate Limiter (Current Spike & Gear Shock Guard)                │
-│  • Deadman Safety Watchdog (Auto-stop on BLE drop)                     │
-└──────────────────┬──────────────────────────────────┬──────────────────┘
-                   │ v_left_target (m/s)              │ v_right_target (m/s)
-                   ▼                                  ▼
-┌──────────────────────────────────────┐ ┌───────────────────────────────┐
-│ Layer 1.5: ClosedLoopMotor (Left)    │ │ Layer 1.5: ClosedLoopMotor (Right)
-│ • Inner Loop: Wheel Velocity PID     │ │ • Inner Loop: Wheel Velocity PID
-│ • Feedback: ESP32Encoder (PCNT)      │ │ • Feedback: ESP32Encoder (PCNT)
-└──────────────────┬───────────────────┘ └─────────────────┬─────────────┘
-                   │ PWM Duty [-1.0, 1.0]                  │ PWM Duty [-1.0, 1.0]
-                   ▼                                       ▼
-┌──────────────────────────────────────┐ ┌───────────────────────────────┐
-│ Layer 1: BTS7960Motor (Left)         │ │ Layer 1: BTS7960Motor (Right) │
-│ • Hardware LEDC PWM (20 kHz)         │ │ • Hardware LEDC PWM (20 kHz)  │
-│ • Direction Logic, Dynamic Braking   │ │ • Direction Logic, Braking    │
-└──────────────────┬───────────────────┘ └─────────────────┬─────────────┘
-                   │ High-Frequency PWM                    │ High-Frequency PWM
-                   ▼                                       ▼
-┌──────────────────────────────────────┐ ┌───────────────────────────────┐
-│ Left BTS7960 Driver & MG310 Motor    │ │ Right BTS7960 Driver & MG310  │
-└──────────────────────────────────────┘ └───────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph App ["Application Layer"]
+        Main["main.cpp<br/>(FreeRTOS Tasks, Robot State Machine, BLE Teleop)"]
+    end
+
+    subgraph L2 ["Layer 2: DifferentialDrive"]
+        Diff["DifferentialDrive<br/>• Kinematics: (v, ω) → (v_left, v_right)<br/>• Outer Loop: Heading-Lock PID (BNO085 Gyro vs. target ω)<br/>• Slew Rate Limiter (Current Spike & Gear Shock Guard)<br/>• Deadman Safety Watchdog (Auto-stop on BLE drop)"]
+    end
+
+    subgraph L1_5 ["Layer 1.5: ClosedLoopMotor"]
+        direction LR
+        CL_L["ClosedLoopMotor (Left)<br/>• Inner Loop: Wheel Velocity PID<br/>• Feedback: ESP32Encoder (PCNT)"]
+        CL_R["ClosedLoopMotor (Right)<br/>• Inner Loop: Wheel Velocity PID<br/>• Feedback: ESP32Encoder (PCNT)"]
+    end
+
+    subgraph L1 ["Layer 1: BTS7960Motor"]
+        direction LR
+        M_L["BTS7960Motor (Left)<br/>• Hardware LEDC PWM (20 kHz)<br/>• Direction Logic, Dynamic Braking"]
+        M_R["BTS7960Motor (Right)<br/>• Hardware LEDC PWM (20 kHz)<br/>• Direction Logic, Dynamic Braking"]
+    end
+
+    subgraph HW ["Physical Actuators"]
+        direction LR
+        DRV_L["Left BTS7960 Driver & MG310 Motor"]
+        DRV_R["Right BTS7960 Driver & MG310 Motor"]
+    end
+
+    Main -->|"Normalized (throttle, turn) or Twist (v, ω)"| Diff
+    Diff -->|"v_left_target (m/s)"| CL_L
+    Diff -->|"v_right_target (m/s)"| CL_R
+    CL_L -->|"PWM Duty [-1.0, 1.0]"| M_L
+    CL_R -->|"PWM Duty [-1.0, 1.0]"| M_R
+    M_L -->|"High-Frequency PWM (20 kHz)"| DRV_L
+    M_R -->|"High-Frequency PWM (20 kHz)"| DRV_R
 ```
 
 ### 1.2 Rationale & Trade-Offs
@@ -117,38 +119,31 @@ To prevent hardware bus conflicts on the ESP32 DevKit:
 
 Closed-loop control is organized as a **cascaded (two-layer) control loop** running deterministically on ESP32 Core 0.
 
-```
-[Target v, ω] (from Xbox Teleop or ROS 2 cmd_vel)
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 1. OUTER LOOP: Heading Lock PID (Chassis Scope)             │
-│    Location: Inside `DifferentialDrive`                     │
-│                                                             │
-│    • Setpoint: Target angular velocity ω                    │
-│    • Feedback: BNO085 Calibrated Gyro Z rate (ωz)           │
-│    • Output: Angular correction trim Δω                     │
-│    • Effective Angular Rate: ω_eff = ω + Δω                 │
-│                                                             │
-│    • Kinematic Demux:                                       │
-│        v_left_target  = v - (ω_eff · L / 2)                 │
-│        v_right_target = v + (ω_eff · L / 2)                 │
-└──────────────────────┬──────────────────────┬───────────────┘
-       v_left_target   │                      │   v_right_target
-                       ▼                      ▼
-┌──────────────────────────────┐  ┌──────────────────────────────┐
-│ 2. INNER LOOP (Left Wheel)   │  │ 2. INNER LOOP (Right Wheel)  │
-│    Location: `ClosedLoopMotor`│  │    Location: `ClosedLoopMotor`│
-│                               │  │                               │
-│    • Setpoint: v_left_target │  │    • Setpoint: v_right_target │
-│    • Feedback: Left PCNT     │  │    • Feedback: Right PCNT    │
-│      Ticks/sec -> v_actual   │  │      Ticks/sec -> v_actual   │
-│    • Algorithm: Velocity PID │  │    • Algorithm: Velocity PID │
-│      with Anti-Windup        │  │      with Anti-Windup        │
-│    • Output: PWM Duty [-1, 1]│  │    • Output: PWM Duty [-1, 1]│
-└──────────────┬───────────────┘  └──────────────┬───────────────┘
-               ▼                                 ▼
-       [Left BTS7960 Motor]              [Right BTS7960 Motor]
+```mermaid
+flowchart TD
+    Cmd["Target [v, ω]<br/>(Xbox Teleop or ROS 2 cmd_vel)"]
+
+    subgraph OuterLoop ["1. OUTER LOOP: Heading Lock PID (DifferentialDrive)"]
+        HeadingPID["Heading PID Controller<br/>• Setpoint: Target angular velocity ω<br/>• Feedback: BNO085 Calibrated Gyro Z rate (ωz)<br/>• Output: Angular correction trim Δω<br/>• Effective Angular Rate: ω_eff = ω + Δω"]
+        Demux["Kinematic Demux<br/>v_left_target = v - (ω_eff · L / 2)<br/>v_right_target = v + (ω_eff · L / 2)"]
+        HeadingPID --> Demux
+    end
+
+    subgraph InnerLoop ["2. INNER LOOP: Wheel Velocity PIDs (ClosedLoopMotor)"]
+        PID_L["Left Velocity PID<br/>• Setpoint: v_left_target<br/>• Feedback: Left PCNT (Ticks/sec → v_actual)<br/>• Algorithm: Velocity PID with Anti-Windup<br/>• Output: PWM Duty [-1.0, 1.0]"]
+        PID_R["Right Velocity PID<br/>• Setpoint: v_right_target<br/>• Feedback: Right PCNT (Ticks/sec → v_actual)<br/>• Algorithm: Velocity PID with Anti-Windup<br/>• Output: PWM Duty [-1.0, 1.0]"]
+    end
+
+    subgraph Actuators ["Hardware Drivers & Motors"]
+        Motor_L["Left BTS7960 Motor Driver"]
+        Motor_R["Right BTS7960 Motor Driver"]
+    end
+
+    Cmd --> HeadingPID
+    Demux -->|"v_left_target"| PID_L
+    Demux -->|"v_right_target"| PID_R
+    PID_L --> Motor_L
+    PID_R --> Motor_R
 ```
 
 ### 4.1 Inner Loop: Wheel Velocity PID (`ClosedLoopMotor`)
@@ -156,11 +151,11 @@ Closed-loop control is organized as a **cascaded (two-layer) control loop** runn
 - **Location:** `orca-controller/lib/ClosedLoopMotor`
 - **Why here?** Wheel speed regulation is strictly decoupled per wheel. The left motor and encoder do not need to know about track gauge or the right wheel.
 - **Feedback Mechanism:** Uses `ESP32Encoder` connected to the ESP32 **Pulse Counter (PCNT)** hardware peripheral. The count delta $\Delta \text{ticks}$ divided by time step $\Delta t$ yields actual wheel speed in meters per second:
-  $$\text{ticks\_per\_meter} = \frac{\text{PPR} \times \text{Gearbox Ratio}}{\pi \times \text{Wheel Diameter}}$$
-  $$v_{\text{actual}} = \frac{\Delta \text{ticks}}{\Delta t \times \text{ticks\_per\_meter}}$$
+  $$\text{Ticks Per Meter} = \frac{\text{PPR} \times \text{Gearbox Ratio}}{\pi \times \text{Wheel Diameter}}$$
+  $$v_{\text{actual}} = \frac{\Delta \text{ticks}}{\Delta t \times \text{Ticks Per Meter}}$$
 - **Controller Algorithm:** Standard discrete PID with Feedforward ($K_{ff}$) and Integral Anti-Windup Clamping:
   $$u(t) = K_{ff} v_{\text{target}} + K_p e(t) + K_i \int e(t) dt + K_d \frac{de(t)}{dt}$$
-  _(Feedforward $K_{ff}$ supplies the baseline voltage needed for a given speed, while PID corrects for carpet drag, wheel slip, and battery voltage sag)._
+  _(Feedforward $K_{ff}$ supplies the baseline voltage needed for a given speed, while PID corrects for carpet drag, wheel slip, and battery voltage sag).\_
 
 ### 4.2 Outer Loop: Heading-Lock PID (`DifferentialDrive`)
 
@@ -391,7 +386,7 @@ class DifferentialDrive {
 2. [ ] **Phase 1B: Encoder Integration & Calibration**
    - Add `ESP32Encoder` to `platformio.ini`.
    - Wire encoder pins to PCNT GPIOs (16/17 and 32/33).
-   - Spin wheels 1 meter; verify measured ticks against calculated $\text{ticks\_per\_meter}$.
+   - Spin wheels 1 meter; verify measured ticks against calculated $\text{Ticks Per Meter}$.
 3. [ ] **Phase 1C: Closed-Loop Velocity PID**
    - Implement `ClosedLoopMotor` with discrete velocity PID.
    - Spawn deterministic 100 Hz FreeRTOS task on Core 0.

@@ -162,41 +162,41 @@ This document serves as the single source of truth and comprehensive engineering
 
 ## 4. Electrical System Schematic Topology
 
-```
-                  [18650 3S2P Li-ion Pack (11.1V - 12.6V)]
-                  [    with Internal 3S Balancing BMS    ]
-                                  │
-          ┌───────────────────────┴───────────────────────┐
-          │                                               │
-  [P4 Recharging Jack]                         [In-line Fuse: 5A-7.5A]
-  (For 12.6V 2A Wall Charger)                             │
-                                                [Main Power Switch (SPST)]
-                                                          │
-          ┌───────────────────────────────────────────────┴─────────────────────────────┐
-          │ High-Current 12V Rail                                                       │
-          │                                                                             │
-          ├──► [BTS7960 Driver #1] ──────► Left Motor (MG310)                           │
-          │                                                                             │
-          ├──► [BTS7960 Driver #2] ──────► Right Motor (MG310)                          │
-          │                                                                             │
-          ├──► [3S Battery Level Display]                                               │
-          │                                                                             │
-          └──► [XL4015 Step-Down (Buck)]                                                │
-                     │ (Adjusted to 5.15V / 4A)                                         │
-                     │                                                                  │
-                     ├──────────────────────────┬─────────────────────────────┐         │
-                     │                          │                             │         │
-                     ▼                          ▼                             ▼         │
-              [ESP32 DevKit]             [LiDAR 360°]                 [Raspberry Pi]    │
-             (Logic & Control)           (Phase 2 SLAM)              (Phase 2 Compute)  │
-              │  │         │                    │                             ▲         │
-              │  │ (I2C)   │ (Encoders)         └──────── USB Serial ─────────┤         │
-              │  │         ├◄─────────────────────────────────────────────────┤         │
-              │  ▼         │                                                  │         │
-              │ [BNO085]   └── UART / Micro-ROS Bridge ───────────────────────┘         │
-              │ (IMU Hub)       (cmd_vel, wheel/odom, imu/data)                         │
-              │                                                                         │
-    ══════════╧══════════════ COMMON SIGNAL GROUND (GND) ═══════════════════════════════╝
+```mermaid
+flowchart TD
+    subgraph BatterySystem ["Battery & Protection"]
+        Battery["18650 3S2P Li-ion Pack (11.1V - 12.6V)<br/>Internal 3S Balancing BMS"]
+        Jack["P4 Recharging Jack<br/>(12.6V 2A Wall Charger)"]
+        Fuse["In-line Fuse (5A - 7.5A)"]
+        Switch["Main Power Switch (SPST)"]
+    end
+
+    subgraph Rail12V ["High-Current 12V Rail"]
+        BTS_L["BTS7960 Driver #1"] --> Motor_L["Left Motor (MG310)"]
+        BTS_R["BTS7960 Driver #2"] --> Motor_R["Right Motor (MG310)"]
+        Display["3S Battery Level Display"]
+        Buck["XL4015 Step-Down Buck<br/>(Adjusted to 5.15V / 4A)"]
+    end
+
+    subgraph Logic5V ["5V Logic, Sensor & Compute Subsystem"]
+        ESP32["ESP32 DevKit<br/>(Real-Time Motor & Sensor Control)"]
+        IMU["BNO085 IMU Hub"]
+        Lidar["LiDAR 360°<br/>(Phase 2 SLAM)"]
+        RPi["Raspberry Pi<br/>(Phase 2 Compute)"]
+    end
+
+    Battery --> Jack
+    Battery --> Fuse --> Switch --> Rail12V
+
+    Buck -->|"5.15V"| ESP32
+    Buck -->|"5.15V"| Lidar
+    Buck -->|"5.15V"| RPi
+
+    ESP32 -->|"I2C"| IMU
+    Lidar -->|"USB Serial"| RPi
+    ESP32 <-->|"UART / Micro-ROS Bridge<br/>(cmd_vel, wheel/odom, imu/data)"| RPi
+    Motor_L -.->|"Encoder Phase A/B"| ESP32
+    Motor_R -.->|"Encoder Phase A/B"| ESP32
 ```
 
 ---
