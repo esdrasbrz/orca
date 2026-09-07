@@ -1,0 +1,7 @@
+{
+  "name": "BTS7960Motor",
+  "version": "1.0.0",
+  "description": "Layer 1 BTS7960 H-bridge motor driver interface with 20 kHz LEDC PWM for ESP32",
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
