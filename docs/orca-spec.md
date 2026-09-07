@@ -12,8 +12,6 @@ This document serves as the single source of truth and comprehensive engineering
 * **Phase 1 (Low-Level Control & Teleop):** Assemble physical chassis, wire safe multi-voltage power distribution, implement motor drivers with high-resolution magnetic encoder feedback, run closed-loop PID straight-line correction, and pilot via an Xbox Bluetooth controller on an ESP32.
 * **Phase 2 (High-Level Autonomy & Perception):** Mount a single-board computer (Raspberry Pi 4/5) and a 360° planar LiDAR, establish Micro-ROS / serial communication bridge (`cmd_vel` and `odom`), build occupancy grid maps via SLAM, and deploy Nav2 path planning.
 
-
-
 ---
 
 ## 2. Key Architectural Decisions & Trade-Off Analysis
@@ -68,7 +66,6 @@ This document serves as the single source of truth and comprehensive engineering
 
 * **Host Interfacing Decision (ESP32 vs. Raspberry Pi):** The BNO085 is wired directly to the **ESP32** over I2C (400 kHz) rather than the Raspberry Pi. This guarantees deterministic, low-latency, real-time sensor sampling under FreeRTOS, allows the ESP32 to run heading-stabilized closed-loop PID in Phase 1 without the Pi present, and cleanly streams packaged `/imu/data` over Micro-ROS in Phase 2 without non-real-time Linux scheduling jitter.
 
-
 ---
 
 ## 3. Orca Detailed Hardware Specification
@@ -97,7 +94,7 @@ This document serves as the single source of truth and comprehensive engineering
   * *Magnetic Separation:* Kept at least 60–80 mm away from high-current BTS7960 power rails and MG310 motor permanent magnets.
 * **Operating Configuration:**
   * **Fusion Mode:** **Game Rotation Vector** (fuses 3-axis gyroscope and 3-axis accelerometer; magnetometer disabled to prevent erratic yaw jumps caused by indoor rebar and ferrous appliances).
-  * **Data Outputs:** 
+  * **Data Outputs:**
     * Unitless orientation quaternions ($x, y, z, w$) at 100 Hz.
     * Bias-compensated angular velocity ($\text{rad/s}$) along $X, Y, Z$.
     * Gravity-separated linear acceleration ($\text{m/s}^2$).
@@ -117,13 +114,10 @@ This document serves as the single source of truth and comprehensive engineering
 * Output: Precisely calibrated to **5.15V DC** (potentiometer secured with threadlocker/silicone to prevent drift from chassis vibration).
 * Rated Current: 4A continuous, 5A peak (provides adequate headroom for Raspberry Pi 4/5, ESP32, and LiDAR without brownouts).
 
-
 * **Battery Charging Ingress:** Panel-mount 5.5 x 2.1 mm P4 female barrel jack wired in parallel with the battery terminals (before the main power switch) to allow direct plugin of a **12.6V 2A CC/CV Li-ion wall charger with LED charge status indicator**.
 * **Real-time State-of-Charge (SoC) Monitoring:**
 * *Immediate Hardware Display:* 3S LED Battery Capacity Bar Indicator (4-level LED status board showing 25%, 50%, 75%, 100%).
 * *Telemetry Integration:* High-side I2C digital sensor (INA219) or analog precision resistor divider ($100\text{ k}\Omega / 22\text{ k}\Omega$) tied to an ESP32 ADC pin for software-level low-voltage buzzer alarms and autonomous docking triggers.
-
-
 
 ### 3.5 Motor Drive Electronics
 
@@ -137,8 +131,6 @@ This document serves as the single source of truth and comprehensive engineering
 * `B+` / `B-`: High-current direct 12V bus from fused battery.
 * `M+` / `M-`: High-current output leads to MG310 motor terminals.
 
-
-
 ### 3.6 Processing & Embedded Firmware
 
 * **Microcontroller:** ESP32 DevKit v1 (30-pin or 38-pin NodeMCU-32S variant).
@@ -147,7 +139,6 @@ This document serves as the single source of truth and comprehensive engineering
 * `Bluepad32` or `XboxSeriesXControllerESP32`: Bluetooth Classic / BLE driver for direct pairing with Microsoft Xbox Wireless Controllers.
 * `ESP32Encoder`: Direct hardware-level utilization of the ESP32 Pulse Counter (PCNT) peripheral for interrupt-free, low-latency quadrature decoding.
 * `Adafruit_BNO08x` / `SparkFun_BNO080_Arduino_Library`: SHTP I2C driver for BNO085 quaternion and angular velocity acquisition.
-
 
 * **Closed-Loop Control:** Cascaded / Dual-layer discrete PID controllers running at 50–100 Hz on ESP32 Core 0:
   * *Inner Loop:* Individual wheel velocity PID regulating left and right PWM outputs against encoder tick feedback.
@@ -217,7 +208,8 @@ $$\text{Ticks Per Meter} = \frac{\text{PPR} \times \text{Gearbox Ratio}}{\pi \ti
 
 $$u(t) = K_p e(t) + K_i \int e(t) dt + K_d \frac{de(t)}{dt}$$
 
-   * *Outer Heading-Lock Loop:* When driving straight ($\omega_{\text{cmd}} = 0$), compare target yaw rate against BNO085 gyro rate $\omega_z$. If a wheel slips or encounters a floor transition, dynamically trim individual wheel setpoints to keep Orca locked dead-straight.
+* *Outer Heading-Lock Loop:* When driving straight ($\omega_{\text{cmd}} = 0$), compare target yaw rate against BNO085 gyro rate $\omega_z$. If a wheel slips or encounters a floor transition, dynamically trim individual wheel setpoints to keep Orca locked dead-straight.
+
 6. **Bluetooth Teleoperation:** Pair Xbox controller via BLE. Map left thumbstick (Y-axis) to linear velocity ($v$) and right thumbstick (X-axis) to angular velocity ($\omega$). Compute differential drive wheel velocities:
 
 $$v_{\text{left}} = v - \frac{\omega \cdot L}{2}, \quad v_{\text{right}} = v + \frac{\omega \cdot L}{2}$$
@@ -240,5 +232,3 @@ $$v_{\text{left}} = v - \frac{\omega \cdot L}{2}, \quad v_{\text{right}} = v + \
 1. **Mechanical Design:** 3D printed docking station with guide funnels and spring-loaded brass/copper charging contacts.
 2. **Electrical Safety:** High-current Schottky diode on Orca's underside charging pads to prevent external chassis shorts while roaming.
 3. **Precision Navigation:** Combine rough LiDAR navigation to a pre-docking waypoint ($50\text{ cm}$ in front of dock) with fine optical alignment using an AprilTag fiducial marker or modulated infrared LED beacons. Charging begins when Orca's ESP32 registers 12.6V on the docking pads.
-
-

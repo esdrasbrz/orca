@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
+
+  build-and-test:
+    name: Build & Test Firmware
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Cache PlatformIO packages & cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/cache
+            orca-controller/.pio
+          key: pio-${{ runner.os }}-${{ hashFiles('orca-controller/platformio.ini') }}
+          restore-keys: |
+            pio-${{ runner.os }}-
+
+      - name: Build firmware
+        run: pio run -d orca-controller
+
+      - name: Run static analysis (cppcheck)
+        run: pio check -d orca-controller --skip-packages
+
+      - name: Compile test suites
+        run: pio test -d orca-controller -e esp32doit-devkit-v1 --without-uploading --without-testing

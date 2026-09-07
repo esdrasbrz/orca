@@ -4,7 +4,7 @@ Design source of truth: `motor-control-architecture.md` (software layers + froze
 
 ## Layered drivetrain — respect the boundaries
 
-```
+```text
 main.cpp                    FreeRTOS tasks, robot state machine, teleop mapping
   → DifferentialDrive       kinematics (unicycle → per-wheel), heading-lock PID,
      (lib/DifferentialDrive) slew-rate limiter, BLE deadman watchdog
@@ -15,6 +15,7 @@ main.cpp                    FreeRTOS tasks, robot state machine, teleop mapping
 ```
 
 Rules:
+
 - A layer may only call the layer directly below it. `BTS7960Motor` has no encoder or track-width knowledge; `ClosedLoopMotor` has no track-width or heading knowledge.
 - Public interfaces for all three classes are **already specified** in `motor-control-architecture.md §5`. Implement to that signature exactly (each constructor takes a `*Config` struct: `BTS7960Config`, `WheelPIDConfig`, `DrivetrainConfig`). If a spec needs to change, change the doc and say so.
 - Each layer must be bring-up testable alone (open-loop `BTS7960Motor` on the bench before `ClosedLoopMotor` exists, etc.).

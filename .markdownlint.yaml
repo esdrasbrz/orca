@@ -1,0 +1,20 @@
+# markdownlint configuration
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+default: true
+
+# MD013/line-length: Allow arbitrary line length for prose, long links, and tables
+MD013: false
+
+# MD033/no-inline-html: Allow inline HTML elements (e.g. badges, details/summary, br)
+MD033: false
+
+# MD024/no-duplicate-heading: Only enforce uniqueness among sibling headings
+MD024:
+  siblings_only: true
+
+# MD029/ol-prefix: Allow arbitrary ordered list numbers (lists broken by display math/diagrams)
+MD029: false
+
+# MD041/first-line-heading: Front-matter (in skills) or badges can precede first heading
+MD041: false
