@@ -2,6 +2,7 @@
 #define __XBOX_CONTROLLER_H__
 
 #include <Arduino.h>
+
 #include <XboxSeriesXControllerESP32_asukiaaa.hpp>
 
 /**
@@ -70,4 +71,4 @@ class XboxController {
   static float normalizeTrigger(uint16_t raw);
 };
 
-#endif // __XBOX_CONTROLLER_H__
+#endif  // __XBOX_CONTROLLER_H__

@@ -6,10 +6,10 @@
 struct BTS7960Config {
   uint8_t pinRPWM;        // Forward PWM pin
   uint8_t pinLPWM;        // Reverse PWM pin
-  int8_t  pinEN;          // Enable pin (-1 if tied permanently to HIGH)
-  bool    inverted;       // Invert direction flag (for mirrored chassis mounting)
+  int8_t pinEN;           // Enable pin (-1 if tied permanently to HIGH)
+  bool inverted;          // Invert direction flag (for mirrored chassis mounting)
   uint32_t pwmFreq;       // PWM frequency in Hz (Default: 20000 Hz)
-  uint8_t  pwmResolution; // Resolution in bits (Default: 10 bits -> 0..1023)
+  uint8_t pwmResolution;  // Resolution in bits (Default: 10 bits -> 0..1023)
 };
 
 class BTS7960Motor {
@@ -46,4 +46,4 @@ class BTS7960Motor {
   void applyOutput(float speed);
 };
 
-#endif // __BTS7960_MOTOR_H__
+#endif  // __BTS7960_MOTOR_H__

@@ -1,20 +1,24 @@
 #include "DifferentialDrive.h"
+
 #include <math.h>
 
 static inline float clampFloat(float val, float minVal, float maxVal) {
-  if (val < minVal) return minVal;
-  if (val > maxVal) return maxVal;
+  if (val < minVal)
+    return minVal;
+  if (val > maxVal)
+    return maxVal;
   return val;
 }
 
 static inline float rampTowards(float current, float target, float maxDelta) {
-  if (target > current + maxDelta) return current + maxDelta;
-  if (target < current - maxDelta) return current - maxDelta;
+  if (target > current + maxDelta)
+    return current + maxDelta;
+  if (target < current - maxDelta)
+    return current - maxDelta;
   return target;
 }
 
-DifferentialDrive::DifferentialDrive(BTS7960Motor& leftMotor,
-                                     BTS7960Motor& rightMotor,
+DifferentialDrive::DifferentialDrive(BTS7960Motor& leftMotor, BTS7960Motor& rightMotor,
                                      const DrivetrainConfig& config)
     : _left(leftMotor),
       _right(rightMotor),
@@ -100,8 +104,8 @@ float DifferentialDrive::getRampedAngular() const {
   return _rampedAngular;
 }
 
-void DifferentialDrive::getWheelStates(float& outLeftVel, float& outRightVel,
-                                       int64_t& outLeftTicks, int64_t& outRightTicks) const {
+void DifferentialDrive::getWheelStates(float& outLeftVel, float& outRightVel, int64_t& outLeftTicks,
+                                       int64_t& outRightTicks) const {
   outLeftVel = _rampedLinear - (_rampedAngular * _halfTrack);
   outRightVel = _rampedLinear + (_rampedAngular * _halfTrack);
   outLeftTicks = 0;
@@ -129,7 +133,7 @@ void DifferentialDrive::update(float gyroYawRateZ) {
   float dt = (now - _lastUpdateTime) / 1000.0f;
   _lastUpdateTime = now;
   if (dt <= 0.0f || dt > 0.1f) {
-    dt = 0.02f; // Fallback to nominal step on jitter or first tick
+    dt = 0.02f;  // Fallback to nominal step on jitter or first tick
   }
 
   // Slew rate limiting for linear and angular velocities

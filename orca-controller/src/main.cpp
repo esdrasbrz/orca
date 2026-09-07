@@ -1,50 +1,46 @@
 #include <Arduino.h>
-#include <XboxController.h>
 #include <BTS7960Motor.h>
 #include <DifferentialDrive.h>
+#include <XboxController.h>
 
 #define LED_PIN 2
 
 // Motor pin allocation based on docs/motor-control-architecture.md §3
-#define LEFT_RPWM_PIN  18
-#define LEFT_LPWM_PIN  19
-#define LEFT_EN_PIN    5
+#define LEFT_RPWM_PIN 18
+#define LEFT_LPWM_PIN 19
+#define LEFT_EN_PIN 5
 
 #define RIGHT_RPWM_PIN 25
 #define RIGHT_LPWM_PIN 26
-#define RIGHT_EN_PIN   23
+#define RIGHT_EN_PIN 23
 
 // Actuator configurations
-static BTS7960Config leftMotorConfig = {
-  .pinRPWM = LEFT_RPWM_PIN,
-  .pinLPWM = LEFT_LPWM_PIN,
-  .pinEN = LEFT_EN_PIN,
-  .inverted = false,
-  .pwmFreq = 20000,
-  .pwmResolution = 10
-};
+static BTS7960Config leftMotorConfig = {.pinRPWM = LEFT_RPWM_PIN,
+                                        .pinLPWM = LEFT_LPWM_PIN,
+                                        .pinEN = LEFT_EN_PIN,
+                                        .inverted = false,
+                                        .pwmFreq = 20000,
+                                        .pwmResolution = 10};
 
 static BTS7960Config rightMotorConfig = {
-  .pinRPWM = RIGHT_RPWM_PIN,
-  .pinLPWM = RIGHT_LPWM_PIN,
-  .pinEN = RIGHT_EN_PIN,
-  .inverted = true, // Right motor mounted 180-deg mirrored on chassis
-  .pwmFreq = 20000,
-  .pwmResolution = 10
-};
+    .pinRPWM = RIGHT_RPWM_PIN,
+    .pinLPWM = RIGHT_LPWM_PIN,
+    .pinEN = RIGHT_EN_PIN,
+    .inverted = true,  // Right motor mounted 180-deg mirrored on chassis
+    .pwmFreq = 20000,
+    .pwmResolution = 10};
 
 // Drivetrain kinematics & safety configuration
 static DrivetrainConfig drivetrainConfig = {
-  .trackWidthMeters = 0.20f,
-  .maxLinearVelocity = 1.0f,
-  .maxAngularVelocity = 5.0f,
-  .maxSlewRate = 2.5f,          // Smooth ramp to protect 5A fuse & BMS
-  .watchdogTimeoutMs = 250,      // Deadman brake if no BLE packet within 250ms
-  .enableHeadingLock = false,
-  .headingKp = 0.0f,
-  .headingKi = 0.0f,
-  .headingKd = 0.0f
-};
+    .trackWidthMeters = 0.20f,
+    .maxLinearVelocity = 1.0f,
+    .maxAngularVelocity = 5.0f,
+    .maxSlewRate = 2.5f,       // Smooth ramp to protect 5A fuse & BMS
+    .watchdogTimeoutMs = 250,  // Deadman brake if no BLE packet within 250ms
+    .enableHeadingLock = false,
+    .headingKp = 0.0f,
+    .headingKi = 0.0f,
+    .headingKd = 0.0f};
 
 // Hardware and controller instances
 BTS7960Motor leftMotor(leftMotorConfig);
@@ -60,7 +56,7 @@ bool ledState = false;
 // Deterministic 100 Hz control loop running on Core 0
 void controlLoopTask(void* pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = pdMS_TO_TICKS(10); // 100 Hz
+  const TickType_t xFrequency = pdMS_TO_TICKS(10);  // 100 Hz
 
   for (;;) {
     // Non-blocking: updates watchdog, slew-rate ramping, and motor PWM registers
@@ -86,14 +82,9 @@ void setup() {
   Serial.println("[Orca] DifferentialDrive initialized with 250ms watchdog.");
 
   // Pin deterministic control loop to Core 0
-  xTaskCreatePinnedToCore(
-    controlLoopTask,
-    "ControlLoop",
-    4096,
-    NULL,
-    configMAX_PRIORITIES - 1,
-    &controlTaskHandle,
-    0 // Core 0
+  xTaskCreatePinnedToCore(controlLoopTask, "ControlLoop", 4096, NULL, configMAX_PRIORITIES - 1,
+                          &controlTaskHandle,
+                          0  // Core 0
   );
   Serial.println("[Orca] Core 0 control task started (100 Hz deterministic).");
 
@@ -129,10 +120,10 @@ void connected() {
   // Stream telemetry at 10 Hz
   if (millis() - lastPrintTime >= 100) {
     lastPrintTime = millis();
-    Serial.printf("[Drive] Throttle:%+5.2f Turn:%+5.2f | RampedLin:%+5.2f RampedAng:%+5.2f | WD:%s\n",
-                  throttle, turn,
-                  drivetrain.getRampedLinear(), drivetrain.getRampedAngular(),
-                  drivetrain.isWatchdogTriggered() ? "TRIGGERED" : "OK");
+    Serial.printf(
+        "[Drive] Throttle:%+5.2f Turn:%+5.2f | RampedLin:%+5.2f RampedAng:%+5.2f | WD:%s\n",
+        throttle, turn, drivetrain.getRampedLinear(), drivetrain.getRampedAngular(),
+        drivetrain.isWatchdogTriggered() ? "TRIGGERED" : "OK");
   }
 }
 

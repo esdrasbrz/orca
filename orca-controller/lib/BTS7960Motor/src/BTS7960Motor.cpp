@@ -87,12 +87,14 @@ void BTS7960Motor::applyOutput(float speed) {
 
   if (effectiveSpeed > 0.0f) {
     uint32_t duty = static_cast<uint32_t>(effectiveSpeed * _maxDuty + 0.5f);
-    if (duty > _maxDuty) duty = _maxDuty;
+    if (duty > _maxDuty)
+      duty = _maxDuty;
     ledcWrite(_channelRPWM, duty);
     ledcWrite(_channelLPWM, 0);
   } else if (effectiveSpeed < 0.0f) {
     uint32_t duty = static_cast<uint32_t>(-effectiveSpeed * _maxDuty + 0.5f);
-    if (duty > _maxDuty) duty = _maxDuty;
+    if (duty > _maxDuty)
+      duty = _maxDuty;
     ledcWrite(_channelRPWM, 0);
     ledcWrite(_channelLPWM, duty);
   } else {

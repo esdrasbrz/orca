@@ -1,33 +1,29 @@
 #include <Arduino.h>
-#include <unity.h>
 #include <BTS7960Motor.h>
+#include <unity.h>
 
 // Pins based on docs/motor-control-architecture.md §3
-#define LEFT_RPWM_PIN  18
-#define LEFT_LPWM_PIN  19
-#define LEFT_EN_PIN    5
+#define LEFT_RPWM_PIN 18
+#define LEFT_LPWM_PIN 19
+#define LEFT_EN_PIN 5
 
 #define RIGHT_RPWM_PIN 25
 #define RIGHT_LPWM_PIN 26
-#define RIGHT_EN_PIN   23
+#define RIGHT_EN_PIN 23
 
-BTS7960Config normalConfig = {
-  .pinRPWM = LEFT_RPWM_PIN,
-  .pinLPWM = LEFT_LPWM_PIN,
-  .pinEN = LEFT_EN_PIN,
-  .inverted = false,
-  .pwmFreq = 20000,
-  .pwmResolution = 10
-};
+BTS7960Config normalConfig = {.pinRPWM = LEFT_RPWM_PIN,
+                              .pinLPWM = LEFT_LPWM_PIN,
+                              .pinEN = LEFT_EN_PIN,
+                              .inverted = false,
+                              .pwmFreq = 20000,
+                              .pwmResolution = 10};
 
-BTS7960Config invertedConfig = {
-  .pinRPWM = RIGHT_RPWM_PIN,
-  .pinLPWM = RIGHT_LPWM_PIN,
-  .pinEN = RIGHT_EN_PIN,
-  .inverted = true,
-  .pwmFreq = 20000,
-  .pwmResolution = 10
-};
+BTS7960Config invertedConfig = {.pinRPWM = RIGHT_RPWM_PIN,
+                                .pinLPWM = RIGHT_LPWM_PIN,
+                                .pinEN = RIGHT_EN_PIN,
+                                .inverted = true,
+                                .pwmFreq = 20000,
+                                .pwmResolution = 10};
 
 BTS7960Motor motorNormal(normalConfig);
 BTS7960Motor motorInverted(invertedConfig);
@@ -159,7 +155,7 @@ void test_inverted_direction_logic(void) {
 }
 
 void setup() {
-  delay(2000); // Allow board to stabilize after serial connect
+  delay(2000);  // Allow board to stabilize after serial connect
   UNITY_BEGIN();
 
   RUN_TEST(test_initialization_and_hardware_registers);

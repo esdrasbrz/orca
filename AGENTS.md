@@ -35,7 +35,10 @@ All commands run from `orca-controller/`:
 | Serial monitor (115200 baud) | `pio device monitor`              |
 | Flash + monitor              | `pio run -t upload -t monitor`    |
 | Clean build                  | `pio run -t clean`                |
-| Unit tests                   | `pio test -e esp32doit-devkit-v1` |
+| Unit tests (on board)        | `pio test -e esp32doit-devkit-v1` |
+| Unit test check (no board)   | `pio test -e esp32doit-devkit-v1 --without-uploading --without-testing` |
+| Static analysis              | `pio check --skip-packages`       |
+| Pre-commit check             | `pre-commit run --all-files`      |
 
 Single env only: `esp32doit-devkit-v1`. On-device tests live in `test/` (e.g. `test_bts7960`). Always run `pio run` (compile-only) before reporting a firmware change as done. When writing tests, test real hardware peripheral registers or kinematics/PID math — never write superficial getter/setter mocks ("test theater"). See `docs/firmware-build.md` for failure diagnostics.
 
@@ -45,7 +48,7 @@ Single env only: `esp32doit-devkit-v1`. On-device tests live in `test/` (e.g. `t
 
 `main.cpp` currently just reads the controller and prints telemetry. The full stack described in `docs/motor-control-architecture.md §5` is:
 
-```
+```text
 main.cpp (FreeRTOS tasks, state machine, teleop)
   → DifferentialDrive   (lib/DifferentialDrive)  — kinematics, heading-lock PID, slew limiter, BLE watchdog
   → ClosedLoopMotor     (lib/ClosedLoopMotor)    — per-wheel velocity PID, encoder feedback

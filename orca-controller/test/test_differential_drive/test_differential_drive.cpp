@@ -1,46 +1,40 @@
 #include <Arduino.h>
-#include <unity.h>
 #include <BTS7960Motor.h>
 #include <DifferentialDrive.h>
+#include <unity.h>
 
 // Pins based on docs/motor-control-architecture.md §3
-#define LEFT_RPWM_PIN  18
-#define LEFT_LPWM_PIN  19
-#define LEFT_EN_PIN    5
+#define LEFT_RPWM_PIN 18
+#define LEFT_LPWM_PIN 19
+#define LEFT_EN_PIN 5
 
 #define RIGHT_RPWM_PIN 25
 #define RIGHT_LPWM_PIN 26
-#define RIGHT_EN_PIN   23
+#define RIGHT_EN_PIN 23
 
-static BTS7960Config leftConfig = {
-  .pinRPWM = LEFT_RPWM_PIN,
-  .pinLPWM = LEFT_LPWM_PIN,
-  .pinEN = LEFT_EN_PIN,
-  .inverted = false,
-  .pwmFreq = 20000,
-  .pwmResolution = 10
-};
+static BTS7960Config leftConfig = {.pinRPWM = LEFT_RPWM_PIN,
+                                   .pinLPWM = LEFT_LPWM_PIN,
+                                   .pinEN = LEFT_EN_PIN,
+                                   .inverted = false,
+                                   .pwmFreq = 20000,
+                                   .pwmResolution = 10};
 
-static BTS7960Config rightConfig = {
-  .pinRPWM = RIGHT_RPWM_PIN,
-  .pinLPWM = RIGHT_LPWM_PIN,
-  .pinEN = RIGHT_EN_PIN,
-  .inverted = true,
-  .pwmFreq = 20000,
-  .pwmResolution = 10
-};
+static BTS7960Config rightConfig = {.pinRPWM = RIGHT_RPWM_PIN,
+                                    .pinLPWM = RIGHT_LPWM_PIN,
+                                    .pinEN = RIGHT_EN_PIN,
+                                    .inverted = true,
+                                    .pwmFreq = 20000,
+                                    .pwmResolution = 10};
 
-static DrivetrainConfig dtConfig = {
-  .trackWidthMeters = 0.20f,
-  .maxLinearVelocity = 1.0f,
-  .maxAngularVelocity = 5.0f,
-  .maxSlewRate = 2.0f,          // 2.0 units/sec^2
-  .watchdogTimeoutMs = 250,      // 250 ms failsafe
-  .enableHeadingLock = false,
-  .headingKp = 0.0f,
-  .headingKi = 0.0f,
-  .headingKd = 0.0f
-};
+static DrivetrainConfig dtConfig = {.trackWidthMeters = 0.20f,
+                                    .maxLinearVelocity = 1.0f,
+                                    .maxAngularVelocity = 5.0f,
+                                    .maxSlewRate = 2.0f,       // 2.0 units/sec^2
+                                    .watchdogTimeoutMs = 250,  // 250 ms failsafe
+                                    .enableHeadingLock = false,
+                                    .headingKp = 0.0f,
+                                    .headingKi = 0.0f,
+                                    .headingKd = 0.0f};
 
 static BTS7960Motor leftMotor(leftConfig);
 static BTS7960Motor rightMotor(rightConfig);
@@ -86,7 +80,7 @@ void test_slew_rate_limiter(void) {
   // Run update loop over ~550 ms to reach 1.0f
   for (int i = 0; i < 30; i++) {
     delay(20);
-    drivetrain.driveArcade(1.0f, 0.0f); // keep heartbeat alive
+    drivetrain.driveArcade(1.0f, 0.0f);  // keep heartbeat alive
     drivetrain.update();
   }
 

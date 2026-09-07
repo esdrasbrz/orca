@@ -2,17 +2,18 @@
 #define __DIFFERENTIAL_DRIVE_H__
 
 #include <Arduino.h>
+
 #include "BTS7960Motor.h"
 
 struct DrivetrainConfig {
-  float trackWidthMeters;     // Axle track gauge L (~0.20m for Orca chassis)
-  float maxLinearVelocity;    // Maximum linear velocity in m/s (or 1.0f normalized)
-  float maxAngularVelocity;   // Maximum angular velocity in rad/s
-  float maxSlewRate;          // Max acceleration in (m/s)/s or duty/s (prevents current spikes)
-  uint32_t watchdogTimeoutMs; // Failsafe timeout in ms (Default: 250 ms)
+  float trackWidthMeters;      // Axle track gauge L (~0.20m for Orca chassis)
+  float maxLinearVelocity;     // Maximum linear velocity in m/s (or 1.0f normalized)
+  float maxAngularVelocity;    // Maximum angular velocity in rad/s
+  float maxSlewRate;           // Max acceleration in (m/s)/s or duty/s (prevents current spikes)
+  uint32_t watchdogTimeoutMs;  // Failsafe timeout in ms (Default: 250 ms)
 
   // Heading Lock PID parameters (Phase 1D seam)
-  bool  enableHeadingLock;
+  bool enableHeadingLock;
   float headingKp;
   float headingKi;
   float headingKd;
@@ -20,8 +21,7 @@ struct DrivetrainConfig {
 
 class DifferentialDrive {
  public:
-  DifferentialDrive(BTS7960Motor& leftMotor,
-                    BTS7960Motor& rightMotor,
+  DifferentialDrive(BTS7960Motor& leftMotor, BTS7960Motor& rightMotor,
                     const DrivetrainConfig& config);
 
   void begin();
@@ -49,8 +49,8 @@ class DifferentialDrive {
   float getRampedAngular() const;
 
   // Odometry query (ticks & velocities for Micro-ROS wheel/odom - Phase 1C seam)
-  void getWheelStates(float& outLeftVel, float& outRightVel,
-                      int64_t& outLeftTicks, int64_t& outRightTicks) const;
+  void getWheelStates(float& outLeftVel, float& outRightVel, int64_t& outLeftTicks,
+                      int64_t& outRightTicks) const;
 
  private:
   BTS7960Motor& _left;
@@ -65,7 +65,7 @@ class DifferentialDrive {
   float _rampedLinear;
   float _rampedAngular;
   float _halfTrack;
-  bool  _watchdogTriggered;
+  bool _watchdogTriggered;
 
   portMUX_TYPE _mux;
 
@@ -73,4 +73,4 @@ class DifferentialDrive {
   void applyOutputs(float vLinear, float vAngular);
 };
 
-#endif // __DIFFERENTIAL_DRIVE_H__
+#endif  // __DIFFERENTIAL_DRIVE_H__
