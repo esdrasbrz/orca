@@ -1,6 +1,6 @@
-# Orca Robot
+# ORCA
 
-Orca is a two-wheel differential drive indoor mobile robot designed for precise navigation, Xbox Bluetooth teleoperation, 2D LiDAR mapping (SLAM), and autonomous navigation.
+**ORCA** (**O**riented **R**obot for **C**artography and **A**utonomy) is a two-wheel differential drive indoor mobile robot designed for precise navigation, Xbox Bluetooth teleoperation, 2D LiDAR mapping (SLAM), and autonomous navigation.
 
 ---
 
