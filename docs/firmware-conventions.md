@@ -39,6 +39,14 @@ Rules:
 ## Units & conventions
 
 - Normalized inputs `[-1, +1]`, **forward = +1**. Physical velocity in m/s, angles/rates in rad and rad/s. `Twist` uses `linearX` (m/s) and `angularZ` (rad/s).
+- **Xbox Teleoperation Mapping:**
+  - **Forward Throttle:** Right Trigger (`RT`, `[0.00, 1.00]`).
+  - **Brake / Reverse:** Left Trigger (`LT`, `[0.00, 1.00]`).
+  - **Longitudinal Demand:** `throttle = RT - LT` (`[-1.00, +1.00]`).
+  - **Steering / Turn:** Left Stick X (`LX`, `[-1.00, +1.00]`, right = $+1.0$).
+- **Kinematic Delegation & Slew Ramping:**
+  - `driveArcade(throttle, turn)` delegates directly to `setTwist(throttle * maxLinearVel, -turn * maxAngularVel)` to keep synchronization, clamping, and watchdog timestamps in a single source of truth.
+  - Slew rate limiting uses a shared `rampTowards(current, target, maxDelta)` pattern for both linear and angular setpoints.
 - Header guards: `#ifndef __CLASS_NAME_H__`.
 - Config-struct constructors; no setter soup. Keep `*Config` structs pure C++ aggregates (no in-class default member initializers) so brace/designated initialization works reliably across C++11/14 toolchains.
 - `DifferentialDrive::setTwist()` and `getWheelStates()` are the Phase 2 Micro-ROS seam (`/cmd_vel`, `/wheel/odom`) — keep them matching `geometry_msgs/msg/Twist` and `nav_msgs/msg/Odometry`.
