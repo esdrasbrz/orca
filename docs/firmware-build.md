@@ -34,7 +34,7 @@ Always run `pio run` (compile-only) before treating a change as done — it is t
 
 ## Common failures
 
-- **`could not open port` / no port found** — board not plugged in, or another process (VS Code monitor, `screen`) holds the port. Run `pio device list`; close other monitors.
+- **`could not open port` / `[Errno 35] Could not exclusively lock port`** — board not plugged in, or another process (VS Code monitor, background `pio device monitor`, `screen`) holds the port. Find and terminate the holding process (`lsof /dev/cu.usbserial-*`, `kill <PID>`).
 - **`A fatal error occurred: Failed to connect to ESP32`** — hold the BOOT button during upload, or the USB cable is power-only.
 - **Undefined reference to a local lib class** — the lib needs `orca-controller/lib/<Name>/library.json`; PlatformIO only auto-links lib folders that have one.
 - **Third-party lib not found** — add it to `lib_deps` in `platformio.ini` with a pinned `^version`, then `pio pkg install`.
@@ -42,4 +42,4 @@ Always run `pio run` (compile-only) before treating a change as done — it is t
 
 ## Tests
 
-`test/` currently has no test files, and `pio test` against the ESP32 needs a connected board. For host-compilable logic (PID math, kinematics), add an `[env:native]` to `platformio.ini` and Unity tests under `test/` so they run without hardware.
+On-device Unity tests run on the ESP32 via `pio test -e esp32doit-devkit-v1` (e.g. `test/test_bts7960`). Tests must verify actual hardware peripheral registers (such as LEDC channel duty cycles via `ledcRead()`) or pure mathematical logic. Before running tests, ensure no serial monitor process is holding the port. For host-compilable logic (PID math, kinematics), add an `[env:native]` to `platformio.ini` and Unity tests under `test/` so they run without hardware.

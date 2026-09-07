@@ -40,8 +40,14 @@ Rules:
 
 - Normalized inputs `[-1, +1]`, **forward = +1**. Physical velocity in m/s, angles/rates in rad and rad/s. `Twist` uses `linearX` (m/s) and `angularZ` (rad/s).
 - Header guards: `#ifndef __CLASS_NAME_H__`.
-- Config-struct constructors; no setter soup.
+- Config-struct constructors; no setter soup. Keep `*Config` structs pure C++ aggregates (no in-class default member initializers) so brace/designated initialization works reliably across C++11/14 toolchains.
 - `DifferentialDrive::setTwist()` and `getWheelStates()` are the Phase 2 Micro-ROS seam (`/cmd_vel`, `/wheel/odom`) — keep them matching `geometry_msgs/msg/Twist` and `nav_msgs/msg/Odometry`.
+
+## Testing & verification rules
+
+- **No "test theater":** Never write tests that only verify member variable assignments or trivial getters/setters. If a test does not verify real hardware state or pure mathematical algorithms, skip it.
+- **Hardware register assertions:** On-device tests (`test/`) must inspect hardware peripheral registers directly (e.g. `ledcRead()` for PWM duty, `digitalRead()` for GPIO state).
+- **LEDC timing & latching:** ESP32 LEDC duty updates latch on the next timer cycle (50 µs at 20 kHz); insert a 1–2 ms delay before checking `ledcRead()`. Note that Arduino-ESP32 HAL sets 100% duty on a 10-bit timer to 1024 (`max_duty + 1`) for full saturation.
 
 ## GPIO / hardware constraints
 
