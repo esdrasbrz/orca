@@ -17,6 +17,7 @@ For full hardware specifications and engineering decisions, see [docs/orca-spec.
 - [ ] **Phase 1 (Current): Low-Level Control & Teleoperation**
   - [x] Xbox BLE controller interface and live telemetry.
   - [x] Dual BTS7960 motor driver control (20 kHz PWM).
+  - [x] Open-loop `DifferentialDrive` (arcade kinematics, slew-rate limiter, BLE deadman watchdog).
   - [ ] MG310 quadrature encoder feedback via ESP32 PCNT peripheral.
   - [ ] BNO085 IMU integration (Game Rotation Vector mode).
   - [ ] Closed-loop PID speed and heading stabilization.

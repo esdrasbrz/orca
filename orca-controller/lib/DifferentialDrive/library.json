@@ -1,0 +1,7 @@
+{
+  "name": "DifferentialDrive",
+  "version": "1.0.0",
+  "description": "Layer 2 differential drive kinematics, arcade mixing, slew-rate limiter, and safety watchdog for Orca",
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
