@@ -37,7 +37,7 @@ All commands run from `orca-controller/`:
 | Clean build                  | `pio run -t clean`                |
 | Unit tests                   | `pio test -e esp32doit-devkit-v1` |
 
-Single env only: `esp32doit-devkit-v1`. `test/` exists but has no tests yet. Always run `pio run` (compile-only) before reporting a firmware change as done — it is the only automated check in this repo. See `docs/firmware-build.md` for failure diagnostics.
+Single env only: `esp32doit-devkit-v1`. On-device tests live in `test/` (e.g. `test_bts7960`). Always run `pio run` (compile-only) before reporting a firmware change as done. When writing tests, test real hardware peripheral registers or kinematics/PID math — never write superficial getter/setter mocks ("test theater"). See `docs/firmware-build.md` for failure diagnostics.
 
 ## Architecture
 

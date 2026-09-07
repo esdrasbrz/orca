@@ -12,3 +12,4 @@ Quick reminders:
 - `pio` is at `~/.platformio/penv/bin/pio`, not on `PATH`. Run `export PATH="$HOME/.platformio/penv/bin:$PATH"` first, and work from `orca-controller/`.
 - After any code change, run `pio run` (compile-only) before reporting it done.
 - Don't claim an upload/flash succeeded unless `pio run -t upload` actually returned success — a board may not be attached.
+- If `pio test` or upload fails with port busy (`[Errno 35] Could not exclusively lock port`), close any active `pio device monitor` or kill the holding process (`lsof /dev/cu.usbserial-*`).
