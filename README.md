@@ -2,8 +2,6 @@
 
 **ORCA** (**O**riented **R**obot for **C**artography and **A**utonomy) is a two-wheel differential drive indoor mobile robot designed for precise navigation, Xbox Bluetooth teleoperation, 2D LiDAR mapping (SLAM), and autonomous navigation.
 
----
-
 ## Overview
 
 - **Locomotion:** 3WD differential drive (2 driven wheels + 1 omnidirectional caster wheel).
@@ -12,8 +10,6 @@
 - **Power:** 3S2P 18650 Li-ion pack (11.1V nominal, 12.6V max) with integrated BMS and XL4015 buck converter (5.15V logic rail).
 
 For full hardware specifications and engineering decisions, see [docs/orca-spec.md](docs/orca-spec.md).
-
----
 
 ## Roadmap
 
