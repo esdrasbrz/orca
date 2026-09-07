@@ -380,9 +380,9 @@ class DifferentialDrive {
 ## 7. Phased Implementation Strategy
 
 1. [ ] **Phase 1A: Open-Loop Teleoperation**
-   - Implement `BTS7960Motor` with 20 kHz LEDC PWM.
-   - Implement open-loop `DifferentialDrive` with arcade mixing, slew-rate ramping, and BLE watchdog.
-   - Verify driving Orca on floor surfaces with the Xbox controller.
+   - [x] Implement `BTS7960Motor` with 20 kHz LEDC PWM.
+   - [ ] Implement open-loop `DifferentialDrive` with arcade mixing, slew-rate ramping, and BLE watchdog.
+   - [ ] Verify driving Orca on floor surfaces with the Xbox controller.
 2. [ ] **Phase 1B: Encoder Integration & Calibration**
    - Add `ESP32Encoder` to `platformio.ini`.
    - Wire encoder pins to PCNT GPIOs (16/17 and 32/33).
