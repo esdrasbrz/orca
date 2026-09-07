@@ -1,0 +1,10 @@
+{
+  "name": "XboxController",
+  "version": "1.0.0",
+  "description": "High-level Xbox Wireless Controller library for ESP32 with normalized axes and telemetry",
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "dependencies": {
+    "asukiaaa/XboxSeriesXControllerESP32_asukiaaa": "^1.1.2"
+  }
+}
