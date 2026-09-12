@@ -113,7 +113,7 @@ To prevent hardware bus conflicts on the ESP32 DevKit:
 | **Left Encoder**  | Phase A / Phase B | GPIO 16, GPIO 17    | ESP32 PCNT hardware pulse counter |
 | **Right Encoder** | Phase A / Phase B | GPIO 32, GPIO 33    | ESP32 PCNT hardware pulse counter |
 | **BNO085 IMU**    | SDA / SCL         | GPIO 21, GPIO 22    | Hardware I2C (400 kHz)            |
-| **Battery ADC**   | Voltage Divider   | GPIO 34 (ADC1)      | ADC1 compatible with BLE active   |
+| **Battery ADC**   | Voltage Divider   | GPIO 34 (ADC1)      | ADC1 compatible with BLE (Optional / Phase 1B) |
 
 ## 4. Closed-Loop Control & Sensor Integration Architecture
 

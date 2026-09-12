@@ -153,6 +153,8 @@ This document serves as the single source of truth and comprehensive engineering
 
 ## 4. Electrical System Schematic Topology
 
+*(For the complete pin-by-pin bench wiring guide and connection tables, see [docs/wiring-schematic.md](wiring-schematic.md)).*
+
 ```mermaid
 flowchart TD
     subgraph BatterySystem ["Battery & Protection"]
